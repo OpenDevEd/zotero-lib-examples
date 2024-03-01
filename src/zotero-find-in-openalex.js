@@ -28,9 +28,39 @@ async function main() {
         //console.log(x);
         const zotero = new Zotero({ group_id: x.group });
         const item = await zotero.item({ group_id: x.group, key: x.key });
-        const title = encodeURIComponent(item.title);
-        const openalex_item = await openalex.works({"searchField":"title", "search":title });
-        console.log(JSON.stringify(openalex_item, null, 4));
+        console.log(item.title);
+        const title = encodeURIComponent(item.title.replace(/,/g, ' '));
+        const openalex_item = await openalex.works({ "searchField": "title", "search": title });
+        console.log(openalex_item.results.length);
+        let out = [];
+        let fullid = "";
+        let fullids = "";
+        for (i of openalex_item.results) {
+            // compare lower case item.title with i.title
+            if (item.title.toLowerCase() == i.title.toLowerCase()) {
+                console.log("+ " + i.id + " " + i.title);
+                // save openalex item to file
+                fullid = i.id.replace(/.*\//g, '');
+                fullids = fullids + "openalex: " +fullid + "\n";
+                const name = fullid + ".json";
+                fs.writeFileSync(name, JSON.stringify(i, null, 4));
+                // upload openalex item to zotero
+                out.push(name);
+            } else {
+                console.log("X " + i.id + " " + i.title);
+            }
+        };
+        if (out.length > 0) {
+            // const result = await zotero.item({ "group_id": x.group, key: x.key, addfiles: out });
+            // console.log(result);
+            if (item.callNumber === '') {
+                // const r2 = await zotero.field({ "group_id": x.group, key: x.key, field: "callNumber", value: "openalex:" + fullid });
+            };
+            const extra = item.extra + "\n" + fullids;
+            const r3 = await zotero.field({ "group_id": x.group, key: x.key, field: "extra", value: extra });
+
+        };
+        // console.log(JSON.stringify(openalex_item, null, 4));
         // fs.writeFileSync(openalex_id + '.json', JSON.stringify(openalex_item, null, 4));
     };
 }
