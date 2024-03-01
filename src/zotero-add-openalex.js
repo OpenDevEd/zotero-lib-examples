@@ -1,6 +1,8 @@
 // import zotero-lib
 const Zotero = require('zotero-lib');
-const openalex = require('openalex-sdk');
+const OpenAlex = require('openalex-sdk');
+const openalex = new OpenAlex();
+
 const fs = require('fs');
 
 // create a new Zotero object
@@ -44,13 +46,14 @@ async function main() {
     const item = await zotero.item({"group_id": x.group, key: x.key});
     console.log(JSON.stringify(item));
     // openalex:W3211651715
-    const openalex_id = getopenalex(item);
+    //const openalex_id = getopenalex(item);
     // const openalex_id = zotero.openalex(item);
+    const openalex_id = "W3211651715";
     openalex_item = await openalex.item({"id": openalex_id});
     // save openalex item to file
     fs.writeFileSync(openalex_id + '.json', JSON.stringify(openalex_item));
     // upload openalex item to zotero
-    const result = await zotero.item({"group_id": x.group, key: x.key, attachfile: openalex_id + '.json'});
+    //const result = await zotero.item({"group_id": x.group, key: x.key, attachfile: openalex_id + '.json'});
   }
 }
 
