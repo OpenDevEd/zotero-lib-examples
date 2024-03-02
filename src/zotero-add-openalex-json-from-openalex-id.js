@@ -60,10 +60,11 @@ async function main(key) {
   let files = [];
   if (oa.length > 0) {
     //if ('openalex' in o && o['openalex']!= '') {
-    for (openalex_id of oa) { }
-    const openalex_item = await openalex.work(openalex_id);
-    fs.writeFileSync(openalex_id + '.json', JSON.stringify(openalex_item, null, 4));
-    files.push(openalex_id + '.json');
+    for (openalex_id of oa) {
+      const openalex_item = await openalex.work(openalex_id);
+      fs.writeFileSync(openalex_id + '.json', JSON.stringify(openalex_item, null, 4));
+      files.push(openalex_id + '.json');
+    }
   };
   // upload openalex items to zotero
   const tags = ["openalex:yes", "openalex:n:" + files.length];
@@ -72,16 +73,16 @@ async function main(key) {
   console.log("]]]");
   // console.log(result);
 };
-    // openalex:W3211651715
-    //const openalex_id = getopenalex(item);
-    // const openalex_id = zotero.openalex(item);
-    //const openalex_id = 'W3211651715';
-    // openalex_item = await openalex.work(openalex_id);
-    // save openalex item to file
-    // fs.writeFileSync(openalex_id + '.json', JSON.stringify(openalex_item, null, 4));
-    // upload openalex item to zotero
-    // const result = await zotero.item({"group_id": x.group, key: x.key, addfiles: [ openalex_id + '.json' ] });
-  
+// openalex:W3211651715
+//const openalex_id = getopenalex(item);
+// const openalex_id = zotero.openalex(item);
+//const openalex_id = 'W3211651715';
+// openalex_item = await openalex.work(openalex_id);
+// save openalex item to file
+// fs.writeFileSync(openalex_id + '.json', JSON.stringify(openalex_item, null, 4));
+// upload openalex item to zotero
+// const result = await zotero.item({"group_id": x.group, key: x.key, addfiles: [ openalex_id + '.json' ] });
+
 
 (async () => {
   for (const key of argv) {

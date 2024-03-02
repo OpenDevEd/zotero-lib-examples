@@ -43,9 +43,11 @@ function get_oa_from_item(item) {
     const extra = [callnumber, ...item.extra.split("\n")];
     let o = {};
     for (xx of extra) {
-        const y = xx.split(/: ?/);
-        if (y[0] == 'openalex') {
-            o[y[1]] = 1;
+        if (xx && xx != '') {
+            const y = xx.split(/: ?/);
+            if (y[0] == 'openalex') {
+                o[y[1]] = 1;
+            };
         };
     };
     return Object.keys(o);
@@ -69,7 +71,7 @@ async function attachTagIfNeeded(item, files) {
         console.log("tag already exists for " + id);
     } else {
         console.log("adding tag for " + id);
-        const result1 = await zotero.item({ "group_id": x.group, key: x.key, addtags: tags });
+        const result1 = await zotero.item({ key: item.key, addtags: searchtags });
     };
 
 }
