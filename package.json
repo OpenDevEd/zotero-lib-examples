@@ -1,24 +1,5 @@
 {
-  "name": "zotero-lib-examples",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/OpenDevEd/zotero-lib-examples.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/OpenDevEd/zotero-lib-examples/issues"
-  },
-  "homepage": "https://github.com/OpenDevEd/zotero-lib-examples#readme",
   "dependencies": {
-    "openalex-sdk": "^1.1.1",
-    "zotero-lib": "^1.0.95"
+    "yargs": "^17.7.2"
   }
 }
