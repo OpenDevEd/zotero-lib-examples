@@ -51,10 +51,11 @@ async function main() {
             }
         };
         if (out.length > 0) {
-            // const result = await zotero.item({ "group_id": x.group, key: x.key, addfiles: out });
+            const tags = ["openalex:yes", "openalex:n:"+out.length];
+            const result = await zotero.item({ "group_id": x.group, key: x.key, addfiles: out, addtags: tags });
             // console.log(result);
             if (item.callNumber === '') {
-                // const r2 = await zotero.field({ "group_id": x.group, key: x.key, field: "callNumber", value: "openalex:" + fullid });
+                const r2 = await zotero.field({ "group_id": x.group, key: x.key, field: "callNumber", value: "openalex:" + fullid });
             };
             const extra = item.extra + "\n" + fullids;
             const r3 = await zotero.field({ "group_id": x.group, key: x.key, field: "extra", value: extra });
