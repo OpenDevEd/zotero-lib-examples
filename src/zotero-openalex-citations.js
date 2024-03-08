@@ -201,7 +201,7 @@ async function connectZoteroToOpenAlex(id) {
     // console.log(result);
 };
 
-async function getCitationsAndRelated(input) {
+async function getCitationsAndRelated(input, collections) {
 
 }
 
@@ -209,6 +209,10 @@ async function getCitationsAndRelated(input) {
     for (const id of argv._) {
         // Get OpenAlex json from Zotero item
         const result = await connectZoteroToOpenAlex(id);
-        const res2 = await getCitationsAndRelated(result);
+        if (result.files.length > 0) {}
+            const collections = await makeZoteroCollections("zotero://select/groups/5404066/collections/R73YVXQ6");
+            const res2 = await getCitationsAndRelated(result, collections);
+    };
+        
     };
 })();
