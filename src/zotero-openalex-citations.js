@@ -202,15 +202,15 @@ async function connectZoteroToOpenAlex(id) {
 };
 
 
-async function retrieveCites(collection, oa) {
+async function retrieveCites(collection, oaid) {
     // retrieve via cites filter:
     // "cited_by_api_url": "https://api.openalex.org/works?filter=cites:W4391342067",
-    const results = openalex( ... );
+    const results = openalex( ... oaid ...);
 };
 
 async function retrieveList(collection, oalist) {
     // retrieve the list from openalex
-    const results = openalex( ... );
+    const results = openalex( ... oalist ...);
 };
 
 async function zoteroUpload(collection, items) {
@@ -241,6 +241,7 @@ async function makeZoteroCollections(url) {
         "openalex_citedby": "",
         "openalex_related": ""
     };
+    // Create collections on Zotero
     return collections;
 };
 
