@@ -202,14 +202,14 @@ async function connectZoteroToOpenAlex(id) {
 };
 
 
-async function retrieveCites(collection, oaid) {
+async function retrieveCites(oaid) {
     // retrieve via cites filter:
     // "cited_by_api_url": "https://api.openalex.org/works?filter=cites:W4391342067",
     // TODO
     // const results = openalex( ... oaid ...);
 };
 
-async function retrieveList(collection, oalist) {
+async function retrieveList(oalist) {
     // retrieve the list from openalex
     // TODO
     // const results = openalex( ... oalist ...);
@@ -226,18 +226,16 @@ async function zoteroUpload(collection, items) {
     */
 };
 
-async function getCitationsAndRelated(input, collection) {
-    oa = input[0]; // We know there is only one openalex record.
-    const cites = await retrieveList(collection.openalex_cites, oa.referenced_works);
+async function getCitationsAndRelated(oa, collection) {
+    const cites = await retrieveList(oa.referenced_works);
     await zoteroUpload(collection.openalex_cites, cites);
-    const related = await retrieveList(collection.openalex_related, oa.related_works);
+    const related = await retrieveList(oa.related_works);
     await zoteroUpload(collection.openalex_related, related);
     const citedBy = await retrieveCites(oa.id);
     await zoteroUpload(collection.openalex_citedBy, citedBy);
 };
 
-
-async function makeZoteroCollections(url) {
+async function makeZoteroCollections(snowball_coll) {
     let collections = {
         "openalex": "",
         "openalex_cites": "",
@@ -246,16 +244,25 @@ async function makeZoteroCollections(url) {
     };
     // Create collections on Zotero
     // TODO
+    /*
+    const res = await zotero.collections({key: snowball_coll, create_child: ["openalex"]});
+    const base = res.key;
+    const res2 = await zotero.collections({key: base, create_child: ["openalex_cites", "openalex_citedBy", "openalex_related]});
+    const base2 = res2.keys
+    collections.openalex = base;
+    collections.openalex_cites = base2[0];
+    */
     return collections;
 };
 
 (async () => {
     for (const id of argv._) {
+        const snowballing_collection = "zotero://select/groups/5404066/collections/R73YVXQ6";
         // Get OpenAlex json from Zotero item
         const result = await connectZoteroToOpenAlex(id);
         if (result.files.length == 1) {
-            const collections = await makeZoteroCollections("zotero://select/groups/5404066/collections/R73YVXQ6");
-            const res2 = await getCitationsAndRelated(result, collections);
+            const collections = await makeZoteroCollections(snowballing_collection);
+            const res2 = await getCitationsAndRelated(result[0], collections);
         } else if (result.files.length > 1) {
             console.log("Multiple openalex records found.");
         } else {
