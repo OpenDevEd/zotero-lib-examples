@@ -158,9 +158,9 @@ async function getOpenAlexJsonFromTitleOrDOI(item, fromdoi) {
     return final;
 };
 
-async function connectZoteroToOpenAlex(id) {
+async function connectZoteroToOpenAlex(x) {
     // const x = getids(id);
-    const item = await zotero.item({ key: id });
+    const item = await zotero.item({ key: x.key });
     let files = [];
     let oaids = [];
     // Method 1: get the openalex id from the zotero item. If it exists, use it to update the zotero item
@@ -268,7 +268,7 @@ async function makeZoteroCollections(snowball_coll) {
         // Get OpenAlex json from Zotero item
         const x = getids(id);
         console.log(JSON.stringify(x, null, 4));
-        const result = await connectZoteroToOpenAlex(x.key);
+        const result = await connectZoteroToOpenAlex(x);
       /*  if (result.files.length == 1) {
             const collections = await makeZoteroCollections(snowball.key);
             const res2 = await getCitationsAndRelated(result[0], collections);
