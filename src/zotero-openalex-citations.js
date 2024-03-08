@@ -5,6 +5,7 @@ const yargs = require('yargs/yargs');
 const { hideBin } = require('yargs/helpers');
 const jq = require('node-jq');
 const fs = require('fs');
+const { zoteroTransformOpenAlex } = require('./utils/zoteroTransform');
 
 const argv = yargs(hideBin(process.argv))
   .demandCommand(0)
@@ -104,6 +105,7 @@ async function attachOpenAlexJsonIfNeeded(id, files) {
 
 async function getOpenAlexJsonFromOpenAlexID(oa) {
   let files = [];
+  let oaitems = [];
   for (openalex_id of oa) {
     console.log(openalex_id);
     // process.exit(0);
@@ -115,8 +117,9 @@ async function getOpenAlexJsonFromOpenAlexID(oa) {
       JSON.stringify(openalex_item, null, 4)
     );
     files.push(openalex_id + '.json');
+    oaitems.push(openalex_item);
   }
-  return files;
+  return { files: files, openAlexItems: oaitems };
 }
 
 async function getOpenAlexJsonFromDOI(item) {
@@ -159,7 +162,11 @@ async function getOpenAlexJsonFromTitleOrDOI(item, fromdoi) {
   }
   // console.log(JSON.stringify(openalex_item, null, 4));
   // fs.writeFileSync(openalex_id + '.json', JSON.stringify(openalex_item, null, 4));
-  const final = { files: files, ids: fullids };
+  const final = {
+    files: files,
+    ids: fullids,
+    openAlexItems: openalex_item.results,
+  };
   // console.log(JSON.stringify(final, null, 4));
   return final;
 }
@@ -169,18 +176,22 @@ async function connectZoteroToOpenAlex(x) {
   const item = await zotero.item({ key: x.key });
   let files = [];
   let oaids = [];
+  let openAlexItems = [];
   // Method 1: get the openalex id from the zotero item. If it exists, use it to update the zotero item
   oaids = get_oa_from_item(item);
   console.log(JSON.stringify(oaids, null, 4));
   const itemhasOA = oaids.length > 0;
   if (oaids.length > 0) {
     console.log('Found openalex id(s) in item: ' + oaids[0]);
-    files = await getOpenAlexJsonFromOpenAlexID(oaids);
+    const res = await getOpenAlexJsonFromOpenAlexID(oaids);
+    files = res.files;
+    openAlexItems = res.openAlexItems;
   } else {
     // Method 2: get openalex json from the doi
     const res = await getOpenAlexJsonFromDOI(item);
     files = res.files;
     oaids = res.ids;
+    openAlexItems = res.openAlexItems;
 
     if (files && files.length > 0) {
       console.log('Found openalex id(s) from doi: ' + oaids[0]);
@@ -190,6 +201,7 @@ async function connectZoteroToOpenAlex(x) {
       // console.log(JSON.stringify(res2, null, 4));
       files = res2.files;
       oaids = res2.ids;
+      openAlexItems = res2.openAlexItems;
     }
   }
   // Finally update.
@@ -218,7 +230,12 @@ async function connectZoteroToOpenAlex(x) {
       });
     }
   }
-  const final = { item: item, files: files, ids: oaids };
+  const final = {
+    item: item,
+    files: files,
+    ids: oaids,
+    openAlexItems: openAlexItems,
+  };
   return final;
   // console.log(result);
 }
@@ -227,33 +244,94 @@ async function retrieveCites(oaid) {
   // retrieve via cites filter:
   // "cited_by_api_url": "https://api.openalex.org/works?filter=cites:W4391342067",
   // TODO
-  // const results = openalex( ... oaid ...);
+  const openalex = new OpenAlex();
+  const results = await openalex.works({
+    filter: {
+      cites: oaid,
+    },
+    retriveAllPages: true,
+  });
+  return results;
+}
+
+async function retrieveOpenAlex(oa) {
+  const openalex = new OpenAlex();
+  const fname = oa.replace('https://openalex.org/', '');
+  // does fname exit?
+  let result = [];
+  const cache = 'cache';
+  if (!fs.existsSync(cache)) {
+    fs.mkdirSync(cache);
+  }
+  const fullFile = cache + '/' + fname + '.json';
+  if (fs.existsSync(fullFile)) {
+    console.log('Skipping api for:' + fname);
+    result = JSON.parse(fs.readFileSync(fullFile));
+  } else {
+    result = await openalex.work(oa);
+    fs.writeFileSync(fullFile, JSON.stringify(result, null, 4));
+  }
+  return result;
 }
 
 async function retrieveList(oalist) {
+  // [ "W123", "W456" ]
   // retrieve the list from openalex
   // TODO
+  let data = { results: [] };
+  for (const oa of oalist) {
+    const result = await retrieveOpenAlex(oa);
+    data.results.push(result);
+  }
+  return data;
+
   // const results = openalex( ... oalist ...);
 }
 
-async function zoteroUpload(collection, items) {
+async function zoteroUpload(openAlexItems, collection, tag) {
   // TODO
   // see https://github.com/OpenDevEd/zotero-json-uploader
   // Something like this:
-  /*
-    const translator = new ZoteroJsonTranslator();
-    const zoteritems = translator.translate(items);
-    await zotero.create({collection: collection, json: zoteritems});
-    */
+  let zoteroItems = await zoteroTransformOpenAlex(openAlexItems);
+  zoteroItems = zoteroItems.map((item) => {
+    item.collections.push(collection);
+    item.tags.push({
+      tag: 'openalex:' + tag,
+    });
+    return item;
+  });
+  const res = await zotero.create_item({
+    collections: collection,
+    items: zoteroItems,
+  });
+
+  console.log(res);
 }
 
-async function getCitationsAndRelated(oa, collection) {
+async function prepareZoteroUpload(oaItems, collections) {
+  // [ "W123", "W456" ]
+  const myKeys = ['cites', 'related', 'citedBy'];
+  for (const key of myKeys) {
+    if (collections && key in oaItems) {
+      if (oaItems[key].results?.length > 0)
+        await zoteroUpload(oaItems[key], collections[key], key);
+    } else {
+      console.log(
+        'Skipping item:' +
+          key +
+          'because it is not in the collection:' +
+          collections[key]
+      );
+    }
+  }
+}
+
+async function getCitationsAndRelated(oa) {
   const cites = await retrieveList(oa.referenced_works);
-  await zoteroUpload(collection.openalex_cites, cites);
   const related = await retrieveList(oa.related_works);
-  await zoteroUpload(collection.openalex_related, related);
   const citedBy = await retrieveCites(oa.id);
-  await zoteroUpload(collection.openalex_citedBy, citedBy);
+  // ensure that the following keys are the same as the keys in makeZoteroCollections
+  return { cites: cites, related: related, citedBy: citedBy };
 }
 
 async function makeZoteroCollections(snowball_coll, collectionNames) {
@@ -280,12 +358,13 @@ async function makeZoteroCollections(snowball_coll, collectionNames) {
     key: itemCollection,
     create_child: collectionNames.slice(2, 5),
   });
+  // ensure that the following keys are the same as the keys in getCitationsAndRelated
   const collections = {
     root: rootCollection,
     openalex: itemCollection,
-    openalex_cites: res2['0'].key,
-    openalex_citedby: res2['1'].key,
-    openalex_related: res2['2'].key,
+    cites: res2['0'].key,
+    citedBy: res2['1'].key,
+    related: res2['2'].key,
   };
   return collections;
 }
@@ -297,26 +376,31 @@ async function makeZoteroCollections(snowball_coll, collectionNames) {
     const x = getids(id);
     console.log(JSON.stringify(x, null, 4));
     const result = await connectZoteroToOpenAlex(x);
-    if (result.files.length == 1) {
+    if (result.openAlexItems.length == 1) {
       //    const collections = await makeZoteroCollections(snowball.key, [
       //     result.item.title + ' ' + result.item.key,
       //     'openalex',
-      //     'openalex_cites',
-      //     'openalex_citedBy',
-      //     'openalex_related',
+      //     'cites',
+      //     'citedBy',
+      //     'related',
       //   ]);
       const collections = {
         root: 'EVNXEDJ2',
         openalex: 'ZHR723KW',
-        openalex_cites: 'PPI3QBF8',
-        openalex_citedby: '93EE554P',
-        openalex_related: 'JS6CBWCP',
+        cites: 'PPI3QBF8',
+        citedBy: '93EE554P',
+        related: 'JS6CBWCP',
       };
       const res = await zotero.item({
         key: x.key,
         addtocollection: [collections.root],
       });
-      // const res2 = await getCitationsAndRelated(result[0], collections);
+      const oaresults = await getCitationsAndRelated(
+        result.openAlexItems[0],
+        collections
+      );
+
+      const res2 = await prepareZoteroUpload(oaresults, collections);
     } else if (result.files.length > 1) {
       console.log('Multiple openalex records found.');
     } else {
