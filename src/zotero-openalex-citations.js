@@ -209,10 +209,10 @@ async function getCitationsAndRelated(input, collections) {
     for (const id of argv._) {
         // Get OpenAlex json from Zotero item
         const result = await connectZoteroToOpenAlex(id);
-        if (result.files.length > 0) {}
+        if (result.files.length > 0) {
             const collections = await makeZoteroCollections("zotero://select/groups/5404066/collections/R73YVXQ6");
             const res2 = await getCitationsAndRelated(result, collections);
-    };
-        
+        };
+
     };
 })();
