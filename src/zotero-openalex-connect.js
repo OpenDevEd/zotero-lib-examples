@@ -196,11 +196,12 @@ async function main(id) {
             const r3 = await zotero.field({ key: x.key, field: "extra", value: extra });
         };
     };
+    return files;
     // console.log(result);
 };
 
 (async () => {
     for (const id of argv._) {
-        await main(id);
+        const files = await main(id);
     };
 })();
