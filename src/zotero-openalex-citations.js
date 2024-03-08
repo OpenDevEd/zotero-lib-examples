@@ -205,6 +205,11 @@ async function getCitationsAndRelated(input, collections) {
 
 }
 
+async function makeZoteroCollections(url) {
+    let collections = {};
+    return collections;
+};
+
 (async () => {
     for (const id of argv._) {
         // Get OpenAlex json from Zotero item
