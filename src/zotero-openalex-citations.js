@@ -201,14 +201,23 @@ async function connectZoteroToOpenAlex(id) {
     // console.log(result);
 };
 
-// "cited_by_api_url": "https://api.openalex.org/works?filter=cites:W4391342067",
 
+async function retrieveCites(collection, oa) {
+    // retrieve via cites filter:
+    // "cited_by_api_url": "https://api.openalex.org/works?filter=cites:W4391342067",
+    const results = openalex( ... );
+};
+
+async function retrieveList(collection, oalist) {
+    // retrieve the list from openalex
+    const results = openalex( ... );
+};
 
 async function getCitationsAndRelated(input, collection) {
     oa = input[0]; // We know there is only one openalex record.
-    await retrieveListAndUpload(collection.openalex_cites, oa.referenced_works);
-    await retrieveListAndUpload(collection.openalex_related, oa.lated_works);
-    await retrieveCitesAndUpload(collection.openalex_citedBy, oa.id);
+    const cites = await retrieveList(collection.openalex_cites, oa.referenced_works);
+    const related = await retrieveList(collection.openalex_related, oa.lated_works);
+    const citedBy = await retrieveCites(collection.openalex_citedBy, oa.id);
 };
 
 
