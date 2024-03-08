@@ -222,7 +222,7 @@ async function zoteroUpload(collection, items) {
     /*
     const translator = new ZoteroJsonTranslator();
     const zoteritems = translator.translate(items);
-    await zotero.upload(zoteritems);
+    await zotero.upload(collection, zoteritems);
     */
 };
 
