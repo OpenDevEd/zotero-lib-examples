@@ -196,13 +196,14 @@ async function connectZoteroToOpenAlex(id) {
             const r3 = await zotero.field({ key: x.key, field: "extra", value: extra });
         };
     };
-    return files;
+    const final = { files: files, ids: oaids };
+    return final;
     // console.log(result);
 };
 
 (async () => {
     for (const id of argv._) {
         // Get OpenAlex json from Zotero item
-        const files = await connectZoteroToOpenAlex(id);
+        const result = await connectZoteroToOpenAlex(id);
     };
 })();
