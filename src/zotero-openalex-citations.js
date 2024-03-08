@@ -201,9 +201,14 @@ async function connectZoteroToOpenAlex(id) {
     // console.log(result);
 };
 
+async function getCitationsAndRelated(input) {
+
+}
+
 (async () => {
     for (const id of argv._) {
         // Get OpenAlex json from Zotero item
         const result = await connectZoteroToOpenAlex(id);
+        const res2 = await getCitationsAndRelated(result);
     };
 })();
