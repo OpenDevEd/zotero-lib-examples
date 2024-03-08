@@ -230,7 +230,7 @@ async function getCitationsAndRelated(input, collection) {
     oa = input[0]; // We know there is only one openalex record.
     const cites = await retrieveList(collection.openalex_cites, oa.referenced_works);
     await zoteroUpload(collection.openalex_cites, cites);
-    const related = await retrieveList(collection.openalex_related, oa.lated_works);
+    const related = await retrieveList(collection.openalex_related, oa.related_works);
     await zoteroUpload(collection.openalex_related, related);
     const citedBy = await retrieveCites(oa.id);
     await zoteroUpload(collection.openalex_citedBy, citedBy);
