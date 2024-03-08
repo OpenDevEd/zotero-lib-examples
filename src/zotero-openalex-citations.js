@@ -8,8 +8,8 @@ const fs = require('fs');
 
 const argv = yargs(hideBin(process.argv))
     .demandCommand(0)
-    .demandOption(['group'])
-    .usage('Usage: zotero-openalex-connect.js --group 123 <keys> The script tries to match a zotero item with an openalex item via: an existing openalex id, via the doi, via the title.')
+    .demandOption(['collection'])
+    .usage('Usage: zotero-openalex-connect.js --collection zotero://... <keys> The script tries to match a zotero item with an openalex item via: an existing openalex id, via the doi, via the title.')
     .help()
     .check((argv) => {
         if (argv._.length === 0) {
@@ -20,7 +20,9 @@ const argv = yargs(hideBin(process.argv))
 
 console.log(argv._);
 
-const zotero = new Zotero({ group_id: argv.group });
+const snowball = getids(argv.collection);
+
+const zotero = new Zotero({ group_id: snowball.group });
 const openalex = new OpenAlex();
 
 function getids(newlocation) {
