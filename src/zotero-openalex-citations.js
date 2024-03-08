@@ -219,9 +219,13 @@ async function makeZoteroCollections(url) {
     for (const id of argv._) {
         // Get OpenAlex json from Zotero item
         const result = await connectZoteroToOpenAlex(id);
-        if (result.files.length > 0) {
+        if (result.files.length == 1) {
             const collections = await makeZoteroCollections("zotero://select/groups/5404066/collections/R73YVXQ6");
             const res2 = await getCitationsAndRelated(result, collections);
+        } else if (result.files.length > 1) {
+            console.log("Multiple openalex records found.");
+        } else {
+            console.log("No openalex records found.");
         };
 
     };
