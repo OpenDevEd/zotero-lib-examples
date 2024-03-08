@@ -213,11 +213,24 @@ async function retrieveList(collection, oalist) {
     const results = openalex( ... );
 };
 
+async function zoteroUpload(collection, items) {
+    // see https://github.com/OpenDevEd/zotero-json-uploader
+    // Something like this: 
+    /*
+    const translator = new ZoteroJsonTranslator();
+    const zoteritems = translator.translate(items);
+    await zotero.upload(zoteritems);
+    */
+};
+
 async function getCitationsAndRelated(input, collection) {
     oa = input[0]; // We know there is only one openalex record.
     const cites = await retrieveList(collection.openalex_cites, oa.referenced_works);
+    await zoteroUpload(collection.openalex_cites, cites);
     const related = await retrieveList(collection.openalex_related, oa.lated_works);
-    const citedBy = await retrieveCites(collection.openalex_citedBy, oa.id);
+    await zoteroUpload(collection.openalex_related, related);
+    const citedBy = await retrieveCites(oa.id);
+    await zoteroUpload(collection.openalex_citedBy, citedBy);
 };
 
 
