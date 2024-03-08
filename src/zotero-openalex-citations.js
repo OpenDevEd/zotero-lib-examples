@@ -205,15 +205,18 @@ async function connectZoteroToOpenAlex(id) {
 async function retrieveCites(collection, oaid) {
     // retrieve via cites filter:
     // "cited_by_api_url": "https://api.openalex.org/works?filter=cites:W4391342067",
-    const results = openalex( ... oaid ...);
+    // TODO
+    // const results = openalex( ... oaid ...);
 };
 
 async function retrieveList(collection, oalist) {
     // retrieve the list from openalex
-    const results = openalex( ... oalist ...);
+    // TODO
+    // const results = openalex( ... oalist ...);
 };
 
 async function zoteroUpload(collection, items) {
+    // TODO
     // see https://github.com/OpenDevEd/zotero-json-uploader
     // Something like this: 
     /*
@@ -242,6 +245,7 @@ async function makeZoteroCollections(url) {
         "openalex_related": ""
     };
     // Create collections on Zotero
+    // TODO
     return collections;
 };
 
