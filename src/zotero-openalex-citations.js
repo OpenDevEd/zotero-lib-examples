@@ -206,7 +206,12 @@ async function getCitationsAndRelated(input, collections) {
 }
 
 async function makeZoteroCollections(url) {
-    let collections = {};
+    let collections = {
+        "openalex": "",
+        "openalex-cites": "",
+        "openalex-citedby": "",
+        "openalex-related": ""
+    };
     return collections;
 };
 
