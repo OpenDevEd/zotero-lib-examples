@@ -259,11 +259,12 @@ async function makeZoteroCollections(snowball_coll) {
 
 (async () => {
     for (const id of argv._) {
-        const snowballing_collection = "zotero://select/groups/5404066/collections/R73YVXQ6";
+        // const snowballing_collection = "zotero://select/groups/5404066/collections/R73YVXQ6";
         // Get OpenAlex json from Zotero item
-        const result = await connectZoteroToOpenAlex(id);
+        const x = getids(id);
+        const result = await connectZoteroToOpenAlex(x.key);
         if (result.files.length == 1) {
-            const collections = await makeZoteroCollections(snowballing_collection);
+            const collections = await makeZoteroCollections(snowball.key);
             const res2 = await getCitationsAndRelated(result[0], collections);
         } else if (result.files.length > 1) {
             console.log("Multiple openalex records found.");
