@@ -46,6 +46,8 @@ function get_oa_from_item(item) {
     let o = {};
     for (xx of extra) {
         if (xx && xx != '') {
+            xx = xx.replace("https\:\/\/openalex.org\/","");
+            console.log(xx);
             const y = xx.split(/: ?/);
             if (y[0] == 'openalex') {
                 o[y[1]] = 1;
@@ -102,7 +104,9 @@ async function attachOpenAlexJsonIfNeeded(id, files) {
 async function getOpenAlexJsonFromOpenAlexID(oa) {
     let files = [];
     for (openalex_id of oa) {
-        const openalex_item = await openalex.work(openalex_id);
+        console.log(openalex_id);
+        // process.exit(0);
+        const openalex_item = await openalex.work("https://openalex.org/"+openalex_id);
         fs.writeFileSync(openalex_id + '.json', JSON.stringify(openalex_item, null, 4));
         files.push(openalex_id + '.json');
     }
@@ -155,12 +159,13 @@ async function getOpenAlexJsonFromTitleOrDOI(item, fromdoi) {
 };
 
 async function connectZoteroToOpenAlex(id) {
-    const x = getids(id);
-    const item = await zotero.item({ key: x.key });
+    // const x = getids(id);
+    const item = await zotero.item({ key: id });
     let files = [];
     let oaids = [];
     // Method 1: get the openalex id from the zotero item. If it exists, use it to update the zotero item
     oaids = get_oa_from_item(item);
+    console.log(JSON.stringify(oaids, null, 4));
     const itemhasOA = oaids.length > 0;
     if (oaids.length > 0) {
         console.log("Found openalex id(s) in item: " + oaids[0]);
@@ -262,8 +267,9 @@ async function makeZoteroCollections(snowball_coll) {
         // const snowballing_collection = "zotero://select/groups/5404066/collections/R73YVXQ6";
         // Get OpenAlex json from Zotero item
         const x = getids(id);
+        console.log(JSON.stringify(x, null, 4));
         const result = await connectZoteroToOpenAlex(x.key);
-        if (result.files.length == 1) {
+      /*  if (result.files.length == 1) {
             const collections = await makeZoteroCollections(snowball.key);
             const res2 = await getCitationsAndRelated(result[0], collections);
         } else if (result.files.length > 1) {
@@ -271,6 +277,6 @@ async function makeZoteroCollections(snowball_coll) {
         } else {
             console.log("No openalex records found.");
         };
-
+*/
     };
 })();
