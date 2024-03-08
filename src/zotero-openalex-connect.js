@@ -152,7 +152,7 @@ async function getOpenAlexJsonFromTitleOrDOI(item, fromdoi) {
     return final;
 };
 
-async function main(id) {
+async function connectZoteroToOpenAlex(id) {
     const x = getids(id);
     const item = await zotero.item({ key: x.key });
     let files = [];
@@ -202,6 +202,7 @@ async function main(id) {
 
 (async () => {
     for (const id of argv._) {
-        const files = await main(id);
+        // Get OpenAlex json from Zotero item
+        const files = await connectZoteroToOpenAlex(id);
     };
 })();
