@@ -318,9 +318,9 @@ async function prepareZoteroUpload(oaItems, collections) {
     } else {
       console.log(
         'Skipping item:' +
-          key +
-          'because it is not in the collection:' +
-          collections[key]
+        key +
+        'because it is not in the collection:' +
+        collections[key]
       );
     }
   }
@@ -369,6 +369,8 @@ async function makeZoteroCollections(snowball_coll, collectionNames) {
   return collections;
 }
 
+
+
 (async () => {
   for (const id of argv._) {
     // const snowballing_collection = "zotero://select/groups/5404066/collections/R73YVXQ6";
@@ -377,24 +379,24 @@ async function makeZoteroCollections(snowball_coll, collectionNames) {
     console.log(JSON.stringify(x, null, 4));
     const result = await connectZoteroToOpenAlex(x);
     if (result.openAlexItems.length == 1) {
-      //    const collections = await makeZoteroCollections(snowball.key, [
-      //     result.item.title + ' ' + result.item.key,
-      //     'openalex',
-      //     'cites',
-      //     'citedBy',
-      //     'related',
-      //   ]);
-      const collections = {
-        root: 'EVNXEDJ2',
-        openalex: 'ZHR723KW',
-        cites: 'PPI3QBF8',
-        citedBy: '93EE554P',
-        related: 'JS6CBWCP',
-      };
+      const collections = await makeZoteroCollections(snowball.key, [
+        result.item.title + ' ' + result.item.key,
+        'openalex',
+        'cites',
+        'citedBy',
+        'related',
+      ]);
       const res = await zotero.item({
         key: x.key,
         addtocollection: [collections.root],
+        addtags: ["_snowballing:openalex"],
       });
+      await zotero.attach_link({
+        key: x.key, 
+        url: `zotero://select/groups/${x.group}/collections/${collections.root}`,
+        title : "Link to snowballing collection",
+        tags:  ["_snowballing:collection"]        
+        });
       const oaresults = await getCitationsAndRelated(
         result.openAlexItems[0],
         collections
