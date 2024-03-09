@@ -252,9 +252,7 @@ async function retrieveCites(oaid) {
     retriveAllPages: true,
   });
   // write results to file
-
-    fs.writeFileSync("citedby.json", JSON.stringify(results, null, 4));
-
+  //  fs.writeFileSync("citedby.json", JSON.stringify(results, null, 4));
   return results;
 }
 
