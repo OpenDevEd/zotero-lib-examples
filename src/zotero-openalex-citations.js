@@ -6,6 +6,7 @@ const { hideBin } = require('yargs/helpers');
 const jq = require('node-jq');
 const fs = require('fs');
 const { zoteroTransformOpenAlex } = require('./utils/zoteroTransform');
+const { log } = require('console');
 
 const argv = yargs(hideBin(process.argv))
   .demandCommand(0)
@@ -29,6 +30,35 @@ const snowball = getids(argv.collection);
 const zotero = new Zotero({ group_id: snowball.group });
 const openalex = new OpenAlex();
 
+const oaLookUp = getLookUp(snowball.group);
+
+function getLookUp(group) {
+  const file = `zotero-${group}.json`;
+  const command = `zotero-lib --out zotero-${group}.json --group ${group} items`;
+  fs.writeFileSync(`zotero_backup-${group}.sh`, command + "\n");
+  console.log("Using file: " + file + "\nRecreate with:\n" + command);
+  let result = {};
+  if (!fs.existsSync(file)) {
+    console.log("You can create an index with:\n" + command);
+    return {};
+  }
+  const lib = JSON.parse(fs.readFileSync(file, 'utf8'));
+  for (item of lib) {
+    // console.log(item.data);
+    const arr = getOAFromItem(item.data);
+    const key = item.key;
+    for (a of arr) {
+      if (!Array.isArray(result[a])) {
+        result[a] = [];
+      }
+      result[a].push(key);
+    }
+  }
+  // write result to file
+  fs.writeFileSync(`zotero-${group}-openalex.json`, JSON.stringify(result, null, 4));
+  return result;
+};
+
 function getids(newlocation) {
   const res = newlocation.match(
     /^zotero\:\/\/select\/groups\/(library|\d+)\/(items|collections)\/([A-Z01-9]+)/
@@ -44,14 +74,20 @@ function getids(newlocation) {
   return x;
 }
 
-function get_oa_from_item(item) {
+function getOAFromItem(item) {
   const callnumber = item.callNumber;
-  const extra = [callnumber, ...item.extra.split('\n')];
+  let extra = [];
+  if (callnumber && callnumber != '') {
+    extra = [callnumber];
+  };
+  if (item.extra && item.extra != '') {
+    extra = [...extra, ...item.extra.split('\n')];
+  };
   let o = {};
   for (xx of extra) {
     if (xx && xx != '') {
       xx = xx.replace('https://openalex.org/', '');
-      console.log(xx);
+      // console.log(xx);
       const y = xx.split(/: ?/);
       if (y[0] == 'openalex') {
         o[y[1]] = 1;
@@ -178,7 +214,7 @@ async function connectZoteroToOpenAlex(x) {
   let oaids = [];
   let openAlexItems = [];
   // Method 1: get the openalex id from the zotero item. If it exists, use it to update the zotero item
-  oaids = get_oa_from_item(item);
+  oaids = getOAFromItem(item);
   console.log(JSON.stringify(oaids, null, 4));
   const itemhasOA = oaids.length > 0;
   if (oaids.length > 0) {
@@ -294,21 +330,52 @@ async function zoteroUpload(openAlexItems, collection, tag) {
   // If we run this recurrently to find new citations, then we need to see whether those items already exist.
   // We should at least check whether they are in the collection already.
   // However, ideally we would check whether they are in Zotero, and if so, just add to the collection.
-  let zoteroItems = await zoteroTransformOpenAlex(openAlexItems);
-  zoteroItems = zoteroItems.map((item) => {
-    item.collections.push(collection);
-    item.tags.push({
-      tag: 'openalex:' + tag,
+  const newOA = [];
+  const existingOA = [];
+  for (i of openAlexItems.results) {
+    const id = i.id.replace(/^.*\//g, '');
+    if (id in oaLookUp && oaLookUp[id].length > 0) {
+      existingOA.push(i);
+    } else {
+      newOA.push(i);
+    }
+  };
+  console.log(
+    'Found ' +
+    existingOA.length +
+    ' openalex items that already exist, and will be added to the collection:' +
+    collection);
+  console.log(
+    'Found ' +
+    newOA.length +
+    ' openalex items to be created');
+  if (newOA.length > 0) {
+    let zoteroItems = await zoteroTransformOpenAlex({ results: newOA });
+    zoteroItems = zoteroItems.map((item) => {
+      item.collections.push(collection);
+      item.tags.push({
+        tag: 'openalex:' + tag,
+      });
+      return item;
     });
-    return item;
-  });
-  //console.log(JSON.stringify(zoteroItems, null, 4));
-  const res = await zotero.create_item({
-    collections: collection,
-    items: zoteroItems,
-  });
-
-  console.log(res);
+    console.log("Uploading " + newOA.length + " openalex items to Zotero");
+    const res = await zotero.create_item({
+      collections: collection,
+      items: zoteroItems,
+    });
+  };
+  if (existingOA.length > 0) {
+    for (i of existingOA) {
+      const zotItemKeys = oaLookUp[i.id.replace(/^.*\//g, '')];
+      console.log('Adding '+ i.id + ' to '+ collection + "; Keys: "+zotItemKeys);
+      for (z of zotItemKeys) {
+        console.log(`- Adding ${z} to ${collection}`);
+        const res = await zotero.item({key: z, addtocollections: collection});
+      };
+    };
+  }
+  console.log('Finished uploading/adding from openalex.');
+  // console.log(res);
 }
 
 async function prepareZoteroUpload(oaItems, collections) {
@@ -394,7 +461,7 @@ async function makeZoteroCollections(snowball_coll, collectionNames) {
       console.log("Adding item to collection:");
       const res = await zotero.item({
         key: x.key,
-        addtocollection: [collections.root],
+        addtocollection: [snowball.key, collections.root],
       });
       console.log("Adding tag to item:");
       const restag = await zotero.item({
