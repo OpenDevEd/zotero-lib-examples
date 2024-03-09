@@ -251,6 +251,10 @@ async function retrieveCites(oaid) {
     },
     retriveAllPages: true,
   });
+  // write results to file
+
+    fs.writeFileSync("citedby.json", JSON.stringify(results, null, 4));
+
   return results;
 }
 
@@ -277,7 +281,6 @@ async function retrieveOpenAlex(oa) {
 async function retrieveList(oalist) {
   // [ "W123", "W456" ]
   // retrieve the list from openalex
-  // TODO
   let data = { results: [] };
   for (const oa of oalist) {
     const result = await retrieveOpenAlex(oa);
@@ -290,8 +293,9 @@ async function retrieveList(oalist) {
 
 async function zoteroUpload(openAlexItems, collection, tag) {
   // TODO
-  // see https://github.com/OpenDevEd/zotero-json-uploader
-  // Something like this:
+  // If we run this recurrently to find new citations, then we need to see whether those items already exist.
+  // We should at least check whether they are in the collection already.
+  // However, ideally we would check whether they are in Zotero, and if so, just add to the collection.
   let zoteroItems = await zoteroTransformOpenAlex(openAlexItems);
   zoteroItems = zoteroItems.map((item) => {
     item.collections.push(collection);
@@ -300,6 +304,7 @@ async function zoteroUpload(openAlexItems, collection, tag) {
     });
     return item;
   });
+  //console.log(JSON.stringify(zoteroItems, null, 4));
   const res = await zotero.create_item({
     collections: collection,
     items: zoteroItems,
@@ -378,7 +383,9 @@ async function makeZoteroCollections(snowball_coll, collectionNames) {
     const x = getids(id);
     console.log(JSON.stringify(x, null, 4));
     const result = await connectZoteroToOpenAlex(x);
+    // TODO
     if (result.openAlexItems.length == 1) {
+      // Before creating the collections, we should check whether there already is a collection.
       const collections = await makeZoteroCollections(snowball.key, [
         result.item.title + ' ' + result.item.key,
         'openalex',
@@ -386,17 +393,23 @@ async function makeZoteroCollections(snowball_coll, collectionNames) {
         'citedBy',
         'related',
       ]);
+      console.log("Adding item to collection:");
       const res = await zotero.item({
         key: x.key,
         addtocollection: [collections.root],
+      });
+      console.log("Adding tag to item:");
+      const restag = await zotero.item({
+        key: x.key,
         addtags: ["_snowballing:openalex"],
       });
+      console.log("Attaching link:");
       await zotero.attach_link({
-        key: x.key, 
+        key: x.key,
         url: `zotero://select/groups/${x.group}/collections/${collections.root}`,
-        title : "Link to snowballing collection",
-        tags:  ["_snowballing:collection"]        
-        });
+        title: "Link to snowballing collection",
+        tags: ["_snowballing:collection"]
+      });
       const oaresults = await getCitationsAndRelated(
         result.openAlexItems[0],
         collections

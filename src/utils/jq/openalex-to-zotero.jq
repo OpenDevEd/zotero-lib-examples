@@ -22,7 +22,7 @@ def absInvert: [[ . | to_entries | .[] | { key: .key, value: .value | .[] } ] | 
     }
   ]
   ,
-  "abstractNote": (if ((. | has("abstract_inverted_index")) and .abstract_inverted_index != null) then .abstract_inverted_index | absInvert else "" end),
+  "abstractNote": (if ((. | has("abstract"))) then (.abstract) else (if ((. | has("abstract_inverted_index")) and .abstract_inverted_index != null) then .abstract_inverted_index | absInvert else "" end) end),
   "date": .publication_date,
   "language": "",
   "shortTitle": "",
