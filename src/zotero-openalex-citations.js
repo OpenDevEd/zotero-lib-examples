@@ -363,6 +363,7 @@ async function zoteroUpload(openAlexItems, collection, tag) {
       collections: collection,
       items: zoteroItems,
     });
+    // TODO: We should look at res, and then update oaLookUp with the new ids.
   };
   if (existingOA.length > 0) {
     for (i of existingOA) {
@@ -442,6 +443,7 @@ async function makeZoteroCollections(snowball_coll, collectionNames) {
 
 
 (async () => {
+  // TODO: It would be good to create an overall log, that can be added to a note.
   for (const id of argv._) {
     // const snowballing_collection = "zotero://select/groups/5404066/collections/R73YVXQ6";
     // Get OpenAlex json from Zotero item
@@ -481,6 +483,8 @@ async function makeZoteroCollections(snowball_coll, collectionNames) {
       );
 
       const res2 = await prepareZoteroUpload(oaresults, collections);
+
+      // save oaLookUp
     } else if (result.files.length > 1) {
       console.log('Multiple openalex records found.');
     } else {
