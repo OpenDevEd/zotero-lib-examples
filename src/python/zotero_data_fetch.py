@@ -8,8 +8,10 @@ def convert_zotero_data(data):
         formatted_item = {
             "itemType": item.get("data", {}).get("itemType", ""),
             "title": item.get("data", {}).get("title", ""),
-            "abstract": item.get("data", {}).get("abstractNote", "")
-        }
+            "abstract": item.get("data", {}).get("abstractNote", ""),
+            "key": item.get("data", {}).get("key", "")
+                
+         }
         formatted_data.append(formatted_item)
     return formatted_data
 
