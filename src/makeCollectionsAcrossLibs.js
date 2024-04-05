@@ -163,7 +163,7 @@ function zolib(k, v, title) {
 function linker(k, v) {
     const t1 = "View item in WB library";
     const t2 = "View item in OpenDevEd public library";
-    return [ zolib(k,v,t1), zolib(v,k,t2)    ];
+    return [zolib(k, v, t1), zolib(v, k, t2)];
 };
 
 function display(rel1, rel2, g1, g2, linkit) {
@@ -185,8 +185,8 @@ function display(rel1, rel2, g1, g2, linkit) {
     // write commands to file
     if (linkit) {
         const f1 = `links_${g1}-${g2}.sh`;
-        fs.writeFileSync(f1, commands.join("\n")+"\n");
-    } else {        
+        fs.writeFileSync(f1, commands.join("\n") + "\n");
+    } else {
     }
     console.log("-------------------------");
 };
@@ -240,12 +240,12 @@ async function analyseAndAddToExtra(line) {
   },
 */
     for (i of item.relations["owl:sameAs"]) {
-        const y= getids(i);
+        const y = getids(i);
         const newitem = await zotero.item({ group: y.group, key: y.key });
         const extra = newitem.extra;
         const locate = `${x.group}:${x.key}`;
         if (!extra.match(/KerkoCite.ItemAlsoKnownAs: [^\n]*${locate}[^\n]*/)) {
-            extra.replace("KerkoCite.ItemAlsoKnownAs:  ", `KerkoCite.ItemAlsoKnownAs: ${locate}`);            
+            extra.replace("KerkoCite.ItemAlsoKnownAs:  ", `KerkoCite.ItemAlsoKnownAs: ${locate}`);
             // await zotero.updateItem({ group: y.group, key: y.key, extra: extra });           
             await zotero.field({ group: y.group, key: y.key, field: 'extra', value: extra });
         }
@@ -256,23 +256,27 @@ async function main(name, file) {
     // Example usage
     // read file from argv0
     const list = fs.readFileSync(file, 'utf-8').split('\n');
-    collections = {};
+    let collections = {};
     // Task 1: Make collections in groups, and add items:
     for (const line of list) {
         const x = getids(line);
-        if (!collections[x.group]) {
-            // make new collection in x.group
-            newCollection = await zotero.collections({ create_child: [ name ], top: true, group: x.group });
-            log(`Created collection ${newCollection.key}`);
-            collections[x.group] = newCollection.key;
+        console.log(x);
+        if (x.key && x.key != '') {
+            if (!collections[x.group]) {
+                // make new collection in x.group
+                const newCollection = await zotero.collections({ create_child: [name], top: true, group: x.group });
+                collections[x.group] = newCollection["0"].key;
+            };
+            await zotero.item({ group: x.group, item: x.key, addtocollection: collections[x.group] });
+            console.log(collections);
         };
-        await zotero.item({ group: x.group, item: x.key, addtocollection: collections[x.group] });
     }
+    console.log(collections);
+    process.exit(0);
     // Task 2: Compare items.
     for (const line of list) {
         await analyseAndAddToExtra(line);
     };
-    console.log(collections);
     // await compareCollections('zotero://select/groups/4804264/collections/RTG22INT', 'zotero://select/groups/4804264/collections/RTG22INT');
 }
 
