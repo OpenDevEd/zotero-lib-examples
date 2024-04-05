@@ -61,7 +61,7 @@ const walkThroughFolders = async (folderId, depth = 1, numbering = '1', results 
 
 function getids(newlocation) {
     const res = newlocation.match(
-        /^zotero\:\/\/select\/groups\/(library|\d+)\/(items|collections)\/([A-Z01-9]+)/
+        /\/groups\/(library|\d+)\/(items|collections)\/([A-Z01-9]+)/
     );
     let x = {};
     if (res) {
@@ -226,7 +226,7 @@ async function compareCollections(argv0, argv1) {
         console.log(`${k} -> ${rel1.out[k]}`);
     };
     for (k of Object.keys(rel2.out)) {
-        console.log(`${k} -> ${rel2.out[k]}`);
+        // console.log(`${k} -> ${rel2.out[k]}`);
     };
     */
 };
@@ -240,15 +240,18 @@ async function analyseAndAddToExtra(line) {
     "owl:sameAs": "http://zotero.org/groups/2486141/items/WYE6VGNR"
     },
     */
-    for (i of item.relations["owl:sameAs"]) {
+    const i = item.relations["owl:sameAs"];
+    // http://zotero.org/groups/2259720/items/N7FPNRRH
+    if (i) {
+        console.log(i)
         const y = getids(i);
         const zot2 = new Zotero({ group_id: y.group });
         const newitem = await zot2.item({ key: y.key });
         const extra = newitem.extra;
         const locate = `${x.group}:${x.key}`;
         if (!extra.match(/KerkoCite.ItemAlsoKnownAs: [^\n]*${locate}[^\n]*/)) {
-            extra.replace("KerkoCite.ItemAlsoKnownAs:  ", `KerkoCite.ItemAlsoKnownAs: ${locate}`);
-            // await zotero.updateItem({ group: y.group, key: y.key, extra: extra });           
+            const newextra = extra.replace(/KerkoCite.ItemAlsoKnownAs: ?/, `KerkoCite.ItemAlsoKnownAs: ${locate} `);
+            console.log(newextra);
             await zotero.field({ group: y.group, key: y.key, field: 'extra', value: extra });
         }
     }
@@ -260,6 +263,7 @@ async function main(name, file) {
     // read file from argv0
     const list = fs.readFileSync(file, 'utf-8').split(/\r?\n/);
     let collections = {};
+    /*
     // Task 1: Make collections in groups, and add items:
     for (const line of list) {
         const x = getids(line);
@@ -280,6 +284,7 @@ async function main(name, file) {
         };
     }
     console.log(collections);
+    */
     // Task 2: Compare items.
     for (const line of list) {
         await analyseAndAddToExtra(line);
