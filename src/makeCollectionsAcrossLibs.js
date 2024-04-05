@@ -233,7 +233,6 @@ async function compareCollections(argv0, argv1) {
 
 async function analyseAndAddToExtra(line) {
     line = line.trim();
-
     if (!line) return;
 
     const x = getids(line);
@@ -256,7 +255,7 @@ async function analyseAndAddToExtra(line) {
         if (!extra.match(/KerkoCite.ItemAlsoKnownAs: [^\n]*${locate}[^\n]*/)) {
             const newextra = extra.replace(/KerkoCite.ItemAlsoKnownAs: ?/, `KerkoCite.ItemAlsoKnownAs: ${locate} `);
             console.log(newextra);
-            await zotero.field({ group: y.group, key: y.key, field: 'extra', value: extra });
+            await zot2.field({ group: y.group, key: y.key, field: 'extra', value: extra });
         }
     }
 };
