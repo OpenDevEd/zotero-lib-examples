@@ -5,7 +5,7 @@ const yargs = require('yargs/yargs');
 const { hideBin } = require('yargs/helpers');
 const jq = require('node-jq');
 const fs = require('fs');
-const { log } = require('console');
+const { log, group } = require('console');
 let zotero = new Zotero();
 
 
@@ -233,15 +233,17 @@ async function compareCollections(argv0, argv1) {
 
 async function analyseAndAddToExtra(line) {
     const x = getids(line);
-    item = await zotero.item({ group: x.group, key: x.key });
+    const zot = new Zotero({ group_id: x.group });
+    item = await zot.item({ group: x.group, key: x.key });
     /*
     "relations": {
     "owl:sameAs": "http://zotero.org/groups/2486141/items/WYE6VGNR"
-  },
-*/
+    },
+    */
     for (i of item.relations["owl:sameAs"]) {
         const y = getids(i);
-        const newitem = await zotero.item({ group: y.group, key: y.key });
+        const zot2 = new Zotero({ group_id: y.group });
+        const newitem = await zot2.item({ key: y.key });
         const extra = newitem.extra;
         const locate = `${x.group}:${x.key}`;
         if (!extra.match(/KerkoCite.ItemAlsoKnownAs: [^\n]*${locate}[^\n]*/)) {
@@ -256,7 +258,7 @@ async function analyseAndAddToExtra(line) {
 async function main(name, file) {
     // Example usage
     // read file from argv0
-    const list = fs.readFileSync(file, 'utf-8').split('\n');
+    const list = fs.readFileSync(file, 'utf-8').split(/\r?\n/);
     let collections = {};
     // Task 1: Make collections in groups, and add items:
     for (const line of list) {
@@ -268,12 +270,16 @@ async function main(name, file) {
                 const newCollection = await zotero.collections({ create_child: [name], top: true, group: x.group });
                 collections[x.group] = newCollection["0"].key;
             };
-            await zotero.item({ group: x.group, item: x.key, addtocollection: collections[x.group] });
-            console.log(collections);
+            // { group: '2259720', item: 'N7FPNRRH', addtocollection: 'HUEJ53Q4' }
+            let zot = new Zotero({ group_id: x.group });
+            const command = { key: x.key, addtocollection: [collections[x.group]] };
+            //console.log(command);
+            const res = await zot.item(command);
+            //console.log(res);
+            //console.log(collections);
         };
     }
     console.log(collections);
-    process.exit(0);
     // Task 2: Compare items.
     for (const line of list) {
         await analyseAndAddToExtra(line);
