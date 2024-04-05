@@ -266,7 +266,6 @@ async function main(name, file) {
     // read file from argv0
     const list = fs.readFileSync(file, 'utf-8').split(/\r?\n/);
     let collections = {};
-    /*
     // Task 1: Make collections in groups, and add items:
     for (const line of list) {
         const x = getids(line);
@@ -274,11 +273,12 @@ async function main(name, file) {
         if (x.key && x.key != '') {
             if (!collections[x.group]) {
                 // make new collection in x.group
-                const newCollection = await zotero.collections({ create_child: [name], top: true, group: x.group });
+                const zot = new Zotero({ group_id: x.group });
+                const newCollection = await zot.collections({ create_child: [name], top: true });
                 collections[x.group] = newCollection["0"].key;
             };
             // { group: '2259720', item: 'N7FPNRRH', addtocollection: 'HUEJ53Q4' }
-            let zot = new Zotero({ group_id: x.group });
+            const zot = new Zotero({ group_id: x.group });
             const command = { key: x.key, addtocollection: [collections[x.group]] };
             //console.log(command);
             const res = await zot.item(command);
@@ -287,7 +287,6 @@ async function main(name, file) {
         };
     }
     console.log(collections);
-    */
     // Task 2: Compare items.
     for (const line of list) {
         await analyseAndAddToExtra(line);
