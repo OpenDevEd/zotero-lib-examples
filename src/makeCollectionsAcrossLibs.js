@@ -232,9 +232,13 @@ async function compareCollections(argv0, argv1) {
 };
 
 async function analyseAndAddToExtra(line) {
+    line = line.trim();
+
+    if (!line) return;
+
     const x = getids(line);
     const zot = new Zotero({ group_id: x.group });
-    item = await zot.item({ group: x.group, key: x.key });
+    const item = await zot.item({ group: x.group, key: x.key });
     /*
     "relations": {
     "owl:sameAs": "http://zotero.org/groups/2486141/items/WYE6VGNR"
