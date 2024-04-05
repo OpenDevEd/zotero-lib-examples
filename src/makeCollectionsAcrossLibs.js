@@ -255,7 +255,8 @@ async function analyseAndAddToExtra(line) {
         if (!extra.match(/KerkoCite.ItemAlsoKnownAs: [^\n]*${locate}[^\n]*/)) {
             const newextra = extra.replace(/KerkoCite.ItemAlsoKnownAs: ?/, `KerkoCite.ItemAlsoKnownAs: ${locate} `);
             console.log(newextra);
-            await zot2.field({ group: y.group, key: y.key, field: 'extra', value: extra });
+            const res = await zot2.field({ group: y.group, key: y.key, field: 'extra', value: extra });
+            console.log(res);
         }
     }
 };
