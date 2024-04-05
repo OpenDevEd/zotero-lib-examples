@@ -252,6 +252,7 @@ async function analyseAndAddToExtra(line) {
     }
 };
 
+
 async function main(name, file) {
     // Example usage
     // read file from argv0
